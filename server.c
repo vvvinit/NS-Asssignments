@@ -5,157 +5,153 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "miracl.h"   /* include MIRACL system */
-#define MAX 5
-#define PORT 8084
+#include "miracl.h"
+#include "constants.h"
 #define SA struct sockaddr
 
 
-big stack_counter;
-big last_key_counter;
-big last_key;
-big negone;
+big stack_index;
+big last_OTP_index;
+big last_OTP;
+big NEGATIVE_ONE;
 
-// Function designed for chat between client and server.
-void func(int sockfd)
-{
-	char buff[MAX];
+// Implementation of Lamport OTP scheme (server side)
+void lamport(int sockfd)
+{	
+	printf("Requesting client for a base OTP!\n\n");
+	char buff[BUFFER_SIZE];
 	int n;
-	stack_counter = mirvar(-1);
-	last_key_counter = mirvar(-1);
-	last_key = mirvar(-1);
-	negone = mirvar(-1);
-	// infinite loop for chat
+	stack_index = mirvar(-1);
+	last_OTP_index = mirvar(-1);
+	last_OTP = mirvar(-1);
+
+	// Loop for server-client connection
 	for (;;) {
-		bzero(buff, MAX);
-		
-		// read the message from client and copy it in buffer
+
+		bzero(buff, BUFFER_SIZE);
 		read(sockfd, buff, sizeof(buff));
-		// print buffer which contains the client contents
 		
-		FILE *fp, *fp1;
-		fp = fopen("server-response.txt", "w+");
-		fp1 = fopen("client-request.txt", "rt");
+		FILE *server_file, *client_file;
+		server_file = fopen("server-response.txt", "w+");
+		client_file = fopen("client-response.txt", "rt");
 
-
-		if(mr_compare(stack_counter,negone)==0){
-			printf("Initialised!\n");
-			last_key_counter = mirvar(MAX-1);
-			innum(last_key,fp1);
-			stack_counter = mirvar(MAX-2);
-			otnum(stack_counter,fp);
-			fclose(fp);
-			otnum(stack_counter,stdout);
+		// If OTP stack is empty, we have received a new base OTP!
+		if(mr_compare(stack_index,NEGATIVE_ONE)==0){
+			printf("Initialised!\nReceived base OTP: ");
+			last_OTP_index = mirvar(STACK_SIZE-1);	// Set last_OTP_index to (stack_size - 1)
+			innum(last_OTP,client_file);			// Get base OTP from client
+			stack_index = mirvar(STACK_SIZE-2);		// Set stack index to (stack size - 1)
+			otnum(stack_index,server_file);			// Request for next OTP
+			fclose(server_file);
+			otnum(last_OTP,stdout);
 		}
 		else {
-			big a,b, transf;
-			a=mirvar(0);
-			b=mirvar(-1);
+			big received_otp,expected_otp, transf;
+			received_otp=mirvar(0);
+			expected_otp=mirvar(0);
 			transf=mirvar(-7);
 			
-			innum(a,fp1);
-			fclose(fp1);
+			innum(received_otp,client_file);	// Get OTP from client
+			fclose(client_file);
 
-			add(last_key,transf,b);
-	
-			if(mr_compare(a,b)==0){
-				printf("Key validated!...requesting next key!");
-				last_key_counter = stack_counter;
-				add(stack_counter,negone,stack_counter);
-				last_key = a;
-				otnum(stack_counter,fp);
-				fclose(fp);
+			add(last_OTP,transf,expected_otp);	// Calculate what the received OTP should be
+
+			// If received OTP is correct, validate it. Else, state that it is invalid!
+			if(mr_compare(received_otp,expected_otp)==0){
+				printf("OTP index: ");
+				otnum(stack_index,stdout);
+				printf("Received OTP: ");
+				otnum(received_otp,stdout);
+				printf("Expected OTP: ");
+				otnum(expected_otp,stdout);
+				printf("OTP validated!\n");
+				last_OTP_index = stack_index;
+				add(stack_index,NEGATIVE_ONE,stack_index);
+				last_OTP = received_otp;
+				otnum(stack_index,server_file);
+				fclose(server_file);
 			}
 			else {
-				printf("\n-----------\ngot this->");
-				otnum(a,stdout);
-				printf("last->");
-				otnum(last_key,stdout);
-				printf("needed this->");
-				otnum(b,stdout);
+				printf("Invalid OTP! :(\nReceived: ");
+				otnum(received_otp,stdout);
+				printf("Required: ");
+				otnum(expected_otp,stdout);
 			}
 		}
 		
-		bzero(buff, MAX);
+		bzero(buff, BUFFER_SIZE);
+		
+		// Check if the OTP stack is empty. If yes, then request for a new base OTP. Else, request for the next OTP.
+		if(mr_compare(stack_index,NEGATIVE_ONE)==0)
+			printf("OTP stack empty. Press return to request client for new base OTP!\n");
+		else
+			printf("Press return key to request next OTP!\n");
 		n = 0;
         while ((buff[n++] = getchar()) != '\n')
             ;
+		if(mr_compare(stack_index,NEGATIVE_ONE)==0)
+			printf("New base OTP requested!\n");
+		else
+			printf("Next OTP requested!\n\n");
 
-		// and send that buffer to client
 		write(sockfd, buff, sizeof(buff));
-
 	}
 }
 
 // Driver function
 int main()
 {	
-	big a, b, c;
-	
-	/* base 10, 5000 digits per big */
 	miracl *mip=mirsys(10000,10);
+	// Initialisation
+	NEGATIVE_ONE = mirvar(-1);
+	
+	// Send -1 as response to denote that the OTP stack has not yet been initialised.
+	FILE *server_file;
+	server_file = fopen("server-response.txt", "w+");
+	otnum(NEGATIVE_ONE,server_file);
+	fclose(server_file);
 
-	/*Initialize variables*/
-	a=mirvar(-1);
-
-	FILE *fp;
-	fp = fopen("server-response.txt", "w+");
-
-	otnum(a,fp);
-	otnum(a,stdout);
-
-	fclose(fp);
-
+	// Following lines of code deal with socket creation and binding that facilitate client-server communication.
 	int sockfd, connfd, len;
 	struct sockaddr_in servaddr, cli;
-
-	// socket create and verification
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
 	if (sockfd == -1) {
-		printf("socket creation failed...\n");
+		printf("Socket creation failed! :(\n");
 		exit(0);
 	}
-	else
-		printf("Socket successfully created..\n");
-	bzero(&servaddr, sizeof(servaddr));
 
-	// assign IP, PORT
+	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(PORT);
 
-	// Binding newly created socket to given IP and verification
 	if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
-		printf("socket bind failed...\n");
+		printf("Socket bind failed! Please free the socket or change port number in constants.h :)\n");
 		exit(0);
 	}
-	else
-		printf("Socket successfully binded..\n");
 
-	// Now server is ready to listen and verification
 	if ((listen(sockfd, 5)) != 0) {
-		printf("Listen failed...\n");
+		printf("Error! Server cannot listen :(\n");
 		exit(0);
 	}
 	else
-		printf("Server listening..\n");
-	len = sizeof(cli);
-
-	// Accept the data packet from client and verification
-	connfd = accept(sockfd, (SA*)&cli, &len);
-	if (connfd < 0) {
-		printf("server accept failed...\n");
-		exit(0);
-	}
-	else
-		printf("server accept the client...\n");
-
+		printf("Waiting for client to connect! :)\n");
 	
+	len = sizeof(cli);
+	connfd = accept(sockfd, (SA*)&cli, &len);
+	
+	if (connfd < 0) {
+		printf("Error! Client could not be connected :(");
+		exit(0);
+	}
+	else
+		printf("Client connected :)\n");
 
-	// Function for chatting between client and server
-	func(connfd);
+	// Lamport OTP function
+	lamport(connfd);
 
-	// After chatting close the socket
 	close(sockfd);
+	return 0;
 }
 
