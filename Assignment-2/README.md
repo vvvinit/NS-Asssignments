@@ -1,4 +1,4 @@
-# Semester V : NS (Network Security) C2 Asssignment
+# Semester V : NS (Network Security) C2 Asssignment 2
 ___
 ## Team members 
 ### [IIT2019194 - Rahul Roy](https://github.com/Rahul171201)
@@ -9,5 +9,5 @@ ___
 ### [IIT2019234 - Pravallika Kodi](https://github.com/iit2019234)
 ___
 ## Topic
-Implementation of Lamport one time password scheme using C and MIRACL Cryptographic SDK.
+Implementation of ‘Needham-Schroeder Protocol’ using C and MIRACL Cryptographic SDK.
 ___
