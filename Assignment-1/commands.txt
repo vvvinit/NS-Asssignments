@@ -1,3 +1,2 @@
-clear && gcc server.c -w -o server -I ./include libmiracl.a && ./serve
-
+clear && gcc server.c -w -o server -I ./include libmiracl.a && ./server
 clear && gcc client.c -w -o client -I ./include libmiracl.a && ./client

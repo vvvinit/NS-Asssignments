@@ -1,3 +1,8 @@
+/**
+	@file   server.c
+	@author Vinit Wagh, vvvinit.w@gmail.com, https://github.com/vvvinit
+*/
+
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>

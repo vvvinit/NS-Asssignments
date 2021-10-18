@@ -1,3 +1,8 @@
+/**
+	@file   client.c
+	@author Vinit Wagh, vvvinit.w@gmail.com, https://github.com/vvvinit
+*/
+
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
