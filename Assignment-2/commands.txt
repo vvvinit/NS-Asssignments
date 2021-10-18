@@ -1,0 +1,8 @@
+clear && g++ IDS_KEYS_GEN.cpp -w -o IDS_KEYS_GEN -I ./include libmiracl.a && ./IDS_KEYS_GEN && rm IDS_KEYS_GEN
+clear && g++ kdc.cpp connection.cpp -w -o kdc -I ./include libmiracl.a && ./kdc && rm kdc
+clear && g++ alice.cpp connection.cpp -w -o alice -I ./include libmiracl.a && ./alice && rm alice
+clear && g++ bob.cpp connection.cpp -w -o bob -I ./include libmiracl.a && ./bob && rm bob
+
+
+clear && g++ server.cpp connection.cpp -w -o server && ./server && rm server
+clear && g++ client.cpp connection.cpp -w -o client && ./client && rm client

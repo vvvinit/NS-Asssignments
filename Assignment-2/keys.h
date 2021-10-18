@@ -1,0 +1,5 @@
+#define ALICE_ID "60268"
+#define BOB_ID "39712"
+
+#define KDC_ALICE_KEY "7099096"
+#define KDC_BOB_KEY "6739439"
