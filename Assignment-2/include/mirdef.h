@@ -1,5 +1,6 @@
 /*
  *   MIRACL compiler/hardware definitions - mirdef.h
+ *   For C++ build of library
  */
 
 #define MR_LITTLE_ENDIAN
@@ -12,3 +13,4 @@
 #define MR_FLASH 52
 #define MAXBASE ((mr_small)1<<(MIRACL-1))
 #define MR_BITSINCHAR 8
+#define MR_CPP
