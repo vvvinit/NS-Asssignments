@@ -1,3 +1,8 @@
+/**
+    @file   kdc.cpp
+    @author Vinit Wagh, vvvinit.w@gmail.com, https://github.com/vvvinit
+*/
+
 #include <bits/stdc++.h>
 #include "connection.h"
 #include "miracl.h"
@@ -18,26 +23,32 @@ int main(){
 	kdc.accept();
     cout << "Client connected" << endl
          << endl;
-    string s;
-    kdc.receive(s);
+    
+    string request;
+    kdc.receive(request);
     
     if(TRACER)
-        cout << "Received data : " << s << endl;
+        cout << "Received data : " << request << endl;
     
-    if(s.length()!=(NONCE_SIZE+2*ID_SIZE)){
+    if(request.length()!=(NONCE_SIZE+2*ID_SIZE)){
         cout << "Invalid Data" << endl;
         exit(EXIT_FAILURE);
     }
 
-    string nonce = s.substr(0, NONCE_SIZE);
-    string client_id = s.substr(NONCE_SIZE, ID_SIZE);
+    string nonce = request.substr(0, NONCE_SIZE);
+    string client_id = request.substr(NONCE_SIZE, ID_SIZE);
 
     if(client_id!=ALICE_ID){
         cout << "Unknown client" << endl;
         exit(EXIT_FAILURE);
     }
 
-    string server_id = s.substr(NONCE_SIZE+ID_SIZE, ID_SIZE);
+    string server_id = request.substr(NONCE_SIZE+ID_SIZE, ID_SIZE);
+
+    if(server_id!=BOB_ID){
+        cout << "Unknown server" << endl;
+        exit(EXIT_FAILURE);
+    }
 
     if(TRACER){
 		cout << "Nonce received : " << nonce << endl;
@@ -46,29 +57,25 @@ int main(){
              << endl;
     }
 
-    
+    anyKey("Press return key to generate session key and ticket");
 
     miracl *mip=mirsys(5000,10);
-
-	long seed = time(0);
-	irand(seed);
+	irand(time(0));
 
     big session_key = mirvar(0);
     bigdig(KEY_SIZE, 10, session_key);
-    char *num = new char[KEY_SIZE+1];
-	otstr(session_key,num);
-    string key(num);
-    delete[] num;
+    string s_session_key = big_to_string(session_key);
 
-    string server_ticket = key + ALICE_ID;
+    string server_ticket = s_session_key + ALICE_ID;
     string encrypted_server_ticket = ns::encrypt(server_ticket, KDC_BOB_KEY);
 
-    string client_ticket = nonce + BOB_ID + key + encrypted_server_ticket;
+    string client_ticket = nonce + BOB_ID + s_session_key + encrypted_server_ticket;
     string encrypted_client_ticket = ns::encrypt(client_ticket, KDC_ALICE_KEY);
 
+    cout << "Session key and ticket generated" << endl << endl;
 
     if(TRACER){
-		cout << "Session key : " << key << endl;
+		cout << "Session key : " << s_session_key << endl;
 		cout << "Server ticket : " << server_ticket << endl;
 		cout << "Server ticket (Encrypted) : " << encrypted_server_ticket << endl;
 		cout << "Client ticket : " << client_ticket << endl;
@@ -76,11 +83,11 @@ int main(){
              << endl;
     }
 
-		cout << "Server ticket length: " << server_ticket.length() << endl;
-		cout << "Server ticket (Encrypted) length: " << encrypted_server_ticket.length() << endl;
+    anyKey("Press return to send ticket to client");
+
     kdc.send(encrypted_client_ticket);
 
-    cout << "Send ticket to client" << endl
+    cout << "Sent ticket to client" << endl << endl
          << "KDC Exiting..." << endl;
 
     return 0;

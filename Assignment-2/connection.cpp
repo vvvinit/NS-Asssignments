@@ -1,3 +1,8 @@
+/**
+    @file   connection.cpp
+    @author Vinit Wagh, vvvinit.w@gmail.com, https://github.com/vvvinit
+*/
+
 #include "connection.h"
 
 tcp::Server::Server(int port, int buffer_size){

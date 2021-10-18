@@ -1,3 +1,8 @@
+/**
+    @file   connection.h
+    @author Vinit Wagh, vvvinit.w@gmail.com, https://github.com/vvvinit
+*/
+
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
