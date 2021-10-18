@@ -9,5 +9,5 @@ ___
 ### [IIT2019234 - Pravallika Kodi](https://github.com/iit2019234)
 ___
 ## Topic
-Implementation of ‘Needham-Schroeder Protocol’ using C and MIRACL Cryptographic SDK.
+Implementation of ‘Needham-Schroeder Protocol’ using C++ and MIRACL Cryptographic SDK.
 ___
