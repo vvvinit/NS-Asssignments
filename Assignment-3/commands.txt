@@ -1,0 +1,3 @@
+clear && g++ keyGen.cpp -w -o keyGen -I ./include libmiracl.a && ./keyGen && rm keyGen
+clear && g++ receiver.cpp connection.cpp -w -o receiver -I ./include libmiracl.a && ./receiver && rm receiver
+clear && g++ sender.cpp connection.cpp -w -o sender -I ./include libmiracl.a && ./sender && rm sender

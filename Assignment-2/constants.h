@@ -9,9 +9,9 @@
 #define BOB_PORT            8080
 #define BUFFER_SIZE         10240
 #define NONCE_SIZE          3
-#define ID_SIZE             5
-#define KEY_SIZE            7
-#define TRACER              0
+#define ID_SIZE             15
+#define KEY_SIZE            20
+#define TRACER              1
 
 void anyKey(std::string msg){
     std::cout << msg;
